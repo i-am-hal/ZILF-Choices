@@ -4,21 +4,48 @@ A small package for ZILF that adds twine-like multiple choice options.
 
 ---
 ## Table of Contents
-1. [Installation](#installation)
-2. [Use](#use)
-3. [Restrictions](#restrictions)
+1. [Inspiration](#inspiration)
+2. [Installation](#installation)
+3. [Use](#use)
+4. [Restrictions and Notes](#restrictions-and-notes)
+5. [Ideas and Future Improvements](#ideas-and-future-improvements)
 
-# Installation
+## Inspiration
+
+I've made a few small projects in Twine and had some real fun making games with the pre-set choices methodology. I recently wanted to have a sequence in a ZIL game involving preset choices as a way for the player to essentially make their own character (such as the beginning of the excellent *Suzerain*). However, I found there were no such implementations that were easy plug-and-play packages. So, here we are, I have attempted to do just that.
+
+## Installation
 
 Download `choices.zil` and place it in your `zilf/zillib` folder.
-You *should* then be able to use it like any other package using `<USE "CHOICES">` at the top of whatever ZILF project you have.
+You *should* be able to use it like any other package using `<USE "CHOICES">` at the top of whatever ZILF project you have.
 
-# Use
+## Use
 
-On any Room you create in ZILF that you want to have a forced set of numbered choices that the user must choose between, you will use the `CHOICES` property.
-Each line will have the number of the choice (0-9), a string which will be shown to the player as that choice's text, and finally a room that the player will be moved to if they make that choice.
+You will use the `CHOICES` property on any Room you create in ZILF that you want to have a forced set of numbered choices that the user must choose between.
+Each line will have the number of the choice (0-9), a string that will be shown to the player as that choice's text, and finally, a room that the player will be moved to if they make that choice.
 Here's a small example.
 
+```ZIL
+<ROOM STANELY-PARABLE (DESC "A Set of Two Doors")
+  (FLAGS RLANDBIT LIGHTBIT)
+  (LDESC "When Stanely came to a set of two open doors he..")
+  (CHOICES
+    1 "Entered the door on his left." TO LEFT-DOOR-PATH
+    2 "Entered the door on his right." TO RIGHT-DOOR-PATH)>
 ```
-<ROOM STANELY-PARABLE (DESC "A Set of Two Doors")>
-```
+
+Here `LEFT-DOOR-PATH` and `RIGHT-DOOR-PATH` are two separate room objects in your project.
+
+## Restrictions and Notes
+
+Unfortunately, due to the way that I have currently implemented all of this, each room *(node?)* can have, at most, 10 choices (those corresponding to digits 0-9). You **cannot** use letters for differentiating your choices, either. Another thing to keep in mind is that while the LDESC of a room *will* be printed before the choices, all objects within a room won't be printed out. Any room that uses that choices property, too, will be kept from being able to enter parser inputs.
+
+## Ideas and Future Improvements
+
+I admit that this is really basic functionality, and probably *not* too useful for anything super amazing. I already have a few ideas on things I could *try* to add that I believe would give this the flexibility required for it to be, actually flexible enough that someone would want to *actually* use it for their project.
+
+* Allow for letter inputs for choices, not just the digits 0-9
+* Conditional choices (choices that only show up if some variable is true) *EG* `1 "Cast a spell to kill the wizard." IF KNOW-MAGIC`
+* Specify a routine to execute before moving to a specified room.
+
+I can't guarantee that I'll update this soon with these changes, or if I can even make these changes. I'll endeavor to do so, though. ZILF is a small and relatively new community, and I'd like there to be a wealth of packages for the language so authors can have an easier time writing their stories, instead of having to re-make some wheel.
