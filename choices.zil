@@ -15,7 +15,7 @@
 <CONSTANT PROP-CHOICE-LEN 6 ;3>
 
 <PROPDEF CHOICES     <>
-    (CHOICES "MANY" I:FIX S:STRING TURN TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)
+    ;(CHOICES "MANY" I:FIX S:STRING TURN TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)
     (CHOICES "MANY" I:FIX S:STRING GO TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)
     (CHOICES "MANY" I:FIX S:STRING TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)>
 
@@ -47,8 +47,8 @@
         <SET OFST <* 3 ;,PROP-CHOICE-LEN .I>>
 
         ;"Retrieve the number"
-        <SET CHOICE-NUM <GET/B .TBL .OFST>>
-        <SET TEXT       <GET/B .TBL <+ 1 .OFST>>>
+        <SET CHOICE-NUM <GET ;/B .TBL .OFST>>
+        <SET TEXT       <GET ;/B .TBL <+ 1 .OFST>>>
 
         ;"Start of loop, set min and max to first number"
         <COND (<=? .I 0>
@@ -119,10 +119,10 @@ player pick which choice they want. Moves the player to that room for their choi
             <SET OFST <* 3 ;,PROP-CHOICE-LEN .I>>
 
             ;"Retrieve the number"
-            <SET CHOICE-NUM  <GET/B .TBL .OFST>>
-            <SET TEXT        <GET/B .TBL <+ 1 .OFST>>>
+            <SET CHOICE-NUM  <GET ;/B .TBL .OFST>>
+            <SET TEXT        <GET ;/B .TBL <+ 1 .OFST>>>
             ;"Retrieve the room that we should go to if the player choice this"
-            <SET CHOICE-ROOM <GET/B .TBL <+ 2 .OFST>>>
+            <SET CHOICE-ROOM <GET ;/B .TBL <+ 2 .OFST>>>
             
             <SET I <+ .I 1>>>)>
     
