@@ -36,6 +36,27 @@ Here's a small example.
 
 Here `LEFT-DOOR-PATH` and `RIGHT-DOOR-PATH` are two separate room objects in your project.
 
+#### Entry Functions, and Choice Exits
+By utilizing the property `ENTRYFCN` you can specify a routine to be executed BEFORE the room is described. You could easily use this functionality to manipulate game state to register the choices of the player.
+
+```ZIL
+<ROOM WHAT-IS-YOUR-NAME? (DESC "A Question of Identity")
+   (FLAGS RLANDBIT LIGHTBIT)
+   (LDESC "Your parents decided to name you...")
+   (CHOICES
+      1 "Harold." TO NAMED-HAROLD
+      2 "Miariam." TO NAMED-MIRIAM)>
+
+<ROOM NAMED-HAROLD ...
+   (ENTRYFCN SET-NAME-HAROLD) ...
+   (CHOICEEXIT PASSIONS-OF-YOUTH)>
+
+<ROOM NAMED-MIRIAM ...
+   (ENTRYFCN SET-NAMED-MIRIAM) ...
+   (CHOICEEXIT PASSIONS-OF-YOUTH)>
+```
+In this example we have the player choose their name, and we register that information, presumably in some variable in our game, with the rooms leading from each of those choices. Within the NAMED-HAROLD room is the property, `CHOICEEXIT` (which I really should rename.) This property will force the player to be moved to the room specified. In this case, both NAMED-HAROLD and NAMED-MIRIAM redirect to the room PASSIONS-OF-YOUTH, where, no-doubt another choice will be made by the player. Therefore these rooms, and their corresponding routines `SET-NAME-HAROLD` and `SET-NAME-MIRIAM` will modify game state to record our choices. I'm sure there could be a much more elegant way to capture this functionality, but for now, for my own purposes this suffices.
+
 ## Restrictions and Notes
 
 Unfortunately, due to the way that I have currently implemented all of this, each room *(node?)* can have, at most, 10 choices (those corresponding to digits 0-9). You **cannot** use letters for differentiating your choices, either. Another thing to keep in mind is that while the LDESC of a room *will* be printed before the choices, all objects within a room won't be printed out. Any room that uses that choices property, too, will be kept from being able to enter parser inputs.
