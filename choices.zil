@@ -2,9 +2,7 @@
 
 <PACKAGE "CHOICES">
 
-<ENTRY V-LOOK CHOICES>
-
-;<PROPDEF CHOICE-TEXT <>>
+<ENTRY V-LOOK CHOICES ENTRYFCN CHOICEEXIT GOTO>
 
 ;"The maximum value allowed in current choice (only modified by functions, don't touch.)"
 <GLOBAL PROP-CHOICES-MAX 0>
@@ -19,15 +17,83 @@
     (CHOICES "MANY" I:FIX S:STRING GO TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)
     (CHOICES "MANY" I:FIX S:STRING TO R:ROOM = "MANY" <WORD .I> <STRING .S> <ROOM .R>)>
 
+;"Function that will be executed when entering a room."
+<PROPDEF ENTRYFCN <>>
+
+;"The room to automatically route to after executing entry function"
+<PROPDEF CHOICEEXIT <>>
+
+;"Respecfying the macros neccesary to redefine GOTO"
+<DEFMAC ORDERING? ()
+    '<N=? ,WINNER ,PLAYER>>
+<DEFMAC RESET-WINNER ()
+    '<SETG WINNER ,PLAYER>>
+
 <SET REDEFINE T>
 
+<ROUTINE GOTO (RM "AUX" WAS-LIT F (CO <>) (OWINNER <>) (ENTRY-FCN <>) (CHOICES? <>) (CHOICE-EXIT <>) CHOICE-ROOM?)
+    <COND (<ORDERING?>
+           <SET OWINNER ,WINNER>
+           <RESET-WINNER>)>
+    <SET WAS-LIT ,HERE-LIT>
+    <SETG HERE .RM>
+    <MOVE ,WINNER ,HERE>
+    <APPLY <GETP .RM ,P?ACTION> ,M-ENTER>
+    ;"Call SEARCH-FOR-LIGHT down here in case M-ENTER adjusts the light."
+    <SETG HERE-LIT <SEARCH-FOR-LIGHT>>
+
+    <AND ;"Pull room's entry function, if exists"
+        <SET ENTRY-FCN <GETP ,HERE ,P?ENTRYFCN>>
+        ;"Execute the function before contents are read of room"
+        <APPLY .ENTRY-FCN>>
+    ;"Check if this is a choices room"
+    <SET CHOICES? <GETPT ,HERE ,P?CHOICES>>
+    ;"Pull a choice exit if one exists"
+    <SET CHOICE-EXIT <GETP ,HERE ,P?CHOICEEXIT>>
+    ;"Is a choice exit if there are choices, or a choice exit here"
+    <SET CHOICE-ROOM? <OR .CHOICES? .CHOICE-EXIT>>
+
+    ;"moved descriptors into GOTO so they'll be called when you call GOTO from a PER routine, etc"
+    <COND (<NOT .WAS-LIT>
+           <COND (,HERE-LIT
+                  <SET F <DARKNESS-F ,M-DARK-TO-LIT>>)
+                 (<OR <DARKNESS-F ,M-DARK-TO-DARK>
+                      <DARKNESS-F ,M-LOOK>>
+                  <SET F T>)>)
+          (,HERE-LIT)
+          (<OR <DARKNESS-F ,M-LIT-TO-DARK>
+               <DARKNESS-F ,M-LOOK>>
+           <SET F T>)>
+    <COND
+        ;"If normal lit room, operate as normal"
+        (<AND <NOT .F> <NOT .CHOICE-ROOM?> <DESCRIBE-ROOM ,HERE>>
+           <DESCRIBE-OBJECTS ,HERE>)
+        
+        ;"If this is a choice room then we will pull for the user's choice"
+        (.CHOICE-ROOM?
+            <SET CO T>
+            <DESCRIBE-ROOM ,HERE T>
+            <CHOICES-CAPTIVE-INPUT ,HERE>)
+        
+        ;"If there is a choice exit, then we will just divert to that new location"
+        (.CHOICE-EXIT
+            <SET CO T>
+            <GOTO .CHOICE-EXIT>)>
+    <COND (<AND ,HERE-LIT <NOT .CO>> <FSET ,HERE ,TOUCHBIT>)>
+    <COND (.OWINNER <SETG WINNER .OWINNER>)>
+    <RTRUE>>
+
 ;"Redefines the V-LOOK function so that it checks (and uses) any choices inplemented for the user."
-<ROUTINE V-LOOK ()
+<ROUTINE V-LOOK ("AUX" (FCN <>) EXIT)
     <COND 
         ;"If a room has any twine-like choices, describe the room, then go through the choices"
         (<AND <GETPT ,HERE ,P?CHOICES> <DESCRIBE-ROOM ,HERE T>>
             <CHOICES-CAPTIVE-INPUT ,HERE>
             <RTRUE>)
+        
+        ;"If this room has choice exit, reroute there (and execute entry function if exists)"
+        (<SET EXIT <GETPT ,HERE ,P?CHOICEEXIT>>
+            <GOTO .EXIT>)
 
         ;"Normal V-LOOK behavior with a room that doesn't have any twine-like choices"
         (<DESCRIBE-ROOM ,HERE T>
@@ -128,9 +194,10 @@ player pick which choice they want. Moves the player to that room for their choi
     
     ;"Print out the digit of the user's choice, then move into new room"
     <TELL N .USER-CHOICE CR CR>
-    <SETG ,HERE .NEW-ROOM>
-    <MOVE ,PLAYER ,HERE>
-    <V-LOOK>>
+    ;<SETG ,HERE .NEW-ROOM>
+    ;<MOVE ,PLAYER ,HERE>
+    ;<V-LOOK>
+    <GOTO .NEW-ROOM>>
 
 ;<ROOM OUTSIDE (DESC "OUTSIDE")
     (IN ROOMS)
